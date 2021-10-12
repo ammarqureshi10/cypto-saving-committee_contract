@@ -13,27 +13,29 @@ contract CommitteeSystem is CommitteeSystemInterface{
     //committee Detail
     struct CommitteeInfo {
         uint256 minimumDeposit;
-        uint256 MaxParticipants;
+        uint256 maxParticipants;
+        //uint256 currentParticipantsCount;
         uint256 expectedTotal; 
         uint256 currentTotal; 
         address[] participants;
     }
     mapping(uint256 => CommitteeInfo) private committeeCreator; // committeeInfo by committeeNo
     
-    uint256 public committeeNo;
+    uint256 public totalCommittees;
     
     event Withdrawal(address to,uint256 amount);
-    event NewCommitteeCreated(uint256 committeeNo, uint256 minimumDeposit, uint256 totalParticipants);
+    event NewCommitteeCreated(uint256 committeeNo, uint256 minimumDeposit, uint256 MaxParticipants);
     event Participated(address by);
     
     function createNewCommittee(uint256 _minimumDeposit, uint256 _MaxParticipants) external override returns(bool){
         require(_minimumDeposit > 0, "minimumDeposit should be greater than 0");
-        committeeNo ++;
+        totalCommittees ++;
+        uint256 committeeNo = totalCommittees;
         
         // set minimumDeposit against committeeNo
         committeeCreator[committeeNo].minimumDeposit = _minimumDeposit;
         // committee max participants
-        committeeCreator[committeeNo].MaxParticipants = _MaxParticipants;
+        committeeCreator[committeeNo].maxParticipants = _MaxParticipants;
         // each participant get expectedTotal amount
         uint256 sumAmount = _minimumDeposit * _MaxParticipants; //100*5=500
         committeeCreator[committeeNo].expectedTotal = sumAmount;
@@ -47,7 +49,7 @@ contract CommitteeSystem is CommitteeSystemInterface{
         require(committeeCreator[_committeeNo].minimumDeposit > 0, "committee not found");
         
         // should not housefull
-        require(committeeCreator[_committeeNo].participants.length + 1 <= committeeCreator[_committeeNo].MaxParticipants, "full");
+        require(committeeCreator[_committeeNo].participants.length + 1 <= committeeCreator[_committeeNo].maxParticipants, "full");
         
         // user should send exact minimumDeposit
         require(msg.value == committeeCreator[_committeeNo].minimumDeposit, "depositValue should be correct");
@@ -75,7 +77,7 @@ contract CommitteeSystem is CommitteeSystemInterface{
         address[] storage arr = committeeCreator[_committeeNo].participants;
         
         //choosing winner
-        address committeeWinner = arr[randomNumber(committeeCreator[_committeeNo].MaxParticipants)];
+        address committeeWinner = arr[randomNumber(committeeCreator[_committeeNo].maxParticipants)];
         
         // give sum-amount to committeeWinner
         withdraw(committeeWinner, committeeCreator[_committeeNo].expectedTotal);
@@ -86,6 +88,7 @@ contract CommitteeSystem is CommitteeSystemInterface{
     function committeeDetail(uint256 _committeeNo) external view returns(uint256 minimumDeposit,
         
         uint256 MaxParticipants,
+        uint256 currentParticipantsCount,
         uint256 expectedTotal,
         uint256 currentTotal,
         address[] memory participants){
@@ -93,7 +96,7 @@ contract CommitteeSystem is CommitteeSystemInterface{
         //committee should exist
         require(committeeCreator[_committeeNo].minimumDeposit > 0, "committee not found");
         
-        return (committeeCreator[_committeeNo].minimumDeposit,committeeCreator[_committeeNo].MaxParticipants, committeeCreator[_committeeNo].expectedTotal,committeeCreator[_committeeNo].currentTotal ,committeeCreator[_committeeNo].participants);
+        return (committeeCreator[_committeeNo].minimumDeposit,committeeCreator[_committeeNo].maxParticipants,committeeCreator[_committeeNo].participants.length ,committeeCreator[_committeeNo].expectedTotal,committeeCreator[_committeeNo].currentTotal ,committeeCreator[_committeeNo].participants);
     }
     
     function contractBalance() external view returns(uint256){
