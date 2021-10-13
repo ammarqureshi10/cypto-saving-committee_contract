@@ -25,7 +25,7 @@ contract CommitteeSystem is CommitteeSystemInterface{
     
     event Withdrawal(address to,uint256 amount);
     event NewCommitteeCreated(uint256 committeeNo, uint256 minimumDeposit, uint256 MaxParticipants);
-    event Participated(address by, uint256 _committeeNo);
+    event Participated(address by, uint256 committeeNo);
     
     function createNewCommittee(uint256 _minimumDeposit, uint256 _MaxParticipants) external override returns(bool){
         require(_minimumDeposit > 0, "minimumDeposit should be greater than 0");
